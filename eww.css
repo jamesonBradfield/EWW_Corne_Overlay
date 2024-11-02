@@ -1,0 +1,133 @@
+/* Base window styling */
+window {
+    background-color: transparent;
+}
+
+/* Keyboard container styling */
+.keyboard-wrapper {
+  background-color: alpha(#1e1e1e, 0.95);
+  border-radius: 12px;
+  padding: 20px;
+  border: solid 1px alpha(#ffffff, 0.1);
+}
+
+.keyboard-container {
+    margin: 10px;
+}
+
+/* Individual key styling */
+.key.inactive {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 5px;
+    margin: 2px;
+    border-radius: 5px;
+    background-color: #2E3440;
+    color: #88C0D0;
+}
+
+.key.active {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 5px;
+    margin: 2px;
+    border-radius: 5px;
+    background-color: #88C0D0;
+    color: #2E3440;
+}
+
+/* Column styling */
+/* Column styling for both sides */
+.left-column-1, .left-column-2, .left-column-3,
+.left-column-4, .left-column-5, .left-column-6 {
+  margin-right: 2px;
+}
+
+.right-column-1, .right-column-2, .right-column-3,
+.right-column-4, .right-column-5, .right-column-6 {
+  margin-left: 2px;
+}/*  Home row emphasis  */
+/* .left-column-3, .left-column-4, .left-column-5, */
+/* .right-column-1, .right-column-2, .right-column-3 { */
+/*     .key { */
+/*         border: 1px solid #4C566A; */
+/*     } */
+/* } */
+
+/* Thumb cluster styling */
+.left-thumb-cluster,
+.right-thumb-cluster {
+  background-color: alpha(#282828, 0.95);
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+/* Make thumb cluster keys slightly larger */
+.left-thumb-cluster .key,
+.right-thumb-cluster .key {
+  min-width: 50px;
+}/* Special keys styling */
+/* .key:has(> label:text("CTL")), */
+/* .key:has(> label:text("SFT")), */
+/* .key:has(> label:text("ALT")), */
+/* .key:has(> label:text("WIN")), */
+/* .key:has(> label:text("L1")), */
+/* .key:has(> label:text("L2")) { */
+/*     background-color: #434C5E; */
+/* } */
+
+/* Text centering for all keys */
+label {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* label.time-label, button.menu-button, box.powermenu-container { */
+/*     font-size: 16px; */
+/*     font-weight: bold; */
+/*     color: #FFFFFF; */
+/*     padding: 5px 10px; */
+/*     background-color: #39404C; */
+/*     border-radius: 5px; */
+/*     opacity: 1; */
+/* } */
+/**/
+/*  Container styles  */
+/* .power-controls { */
+/*     background-color: #2E3440; */
+/*     padding: 15px; */
+/*     border-radius: 10px; */
+/* } */
+/**/
+/*  Status indicator styles  */
+/* .status-indicator { */
+/*     min-height: 30px; */
+/* 		min-width: 30px; */
+/* } */
+/**/
+/* .indicator-overlay { */
+/*     min-height: 30px; */
+/* 		min-width: 30px; */
+/* } */
+/**/
+/* .indicator-icon { */
+/*     font-size: 16px; */
+/*     color: #D8DEE9; */
+/* } */
+/**/
+/* Progress bar styles */
+/* .indicator-progress trough { */
+/*     min-height: 30px; */
+/* 		min-width: 30px; */
+/*     background-color: #3B4252; */
+/*     border-radius: 0; */
+/* } */
+/**/
+/* .indicator-progress trough progress { */
+/*     min-height: 30px; */
+/* 		min-width: 30px; */
+/*     background-color: #88C0D0; */
+/*     border-radius: 0; */
+/* } */

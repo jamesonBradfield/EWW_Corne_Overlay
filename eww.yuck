@@ -1,0 +1,204 @@
+;; Variables
+;; Listeners for dynamic data
+(deflisten volume-value :initial 0
+  'tail -F /tmp/volume.txt')  ;; Listen for volume changes from /tmp/volume.txt
+
+(deflisten brightness-value :initial 100
+  'tail -F /tmp/brightness.txt')  ;; Listen for brightness changes from /tmp/brightness.txt
+
+;; Pollers for dynamic data
+(defpoll power-value 
+  :interval "5s"  ;; Update every 5 seconds
+  "upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep percentage | awk '{print $2}' | tr -d '%'")  ;; Get battery percentage
+
+(defpoll workspace
+  :interval '5s'
+  "hyprctl workspaces | grep 'workspace ID ' | awk '{print $4}' | sed 's/(//g' | sed 's/)//g' | sed 's/special://g'")
+
+;; Time display
+(defpoll time-display 
+  :interval "5s"  ;; Update every 5 seconds
+  `date +'%b %d   %I:%M'`)  ;; Format time string
+
+;; Variables
+(deflisten all_keys 
+  :initial "{\"labels\":[[\"TAB\",\"SFT\",\"CTL\"],[\"Q\",\"A\",\"Z\"],[\"W\",\"S\",\"X\"],[\"E\",\"D\",\"C\"],[\"R\",\"F\",\"V\"],[\"T\",\"G\",\"B\"],[\"Y\",\"H\",\"N\"],[\"U\",\"J\",\"M\"],[\"I\",\"K\",\",\"],[\"O\",\"L\",\".\"],[\"P\",\";\",\"/\"],[\"BSPC\",\"'\",\"ESC\"],[\"WIN\",\"L1\",\"SPC\"],[\"RTRN\",\"L2\",\"ALT\"]],\"active_keys\":{\"Q\":false,\"W\":false,\"E\":false,\"R\":false,\"T\":false,\"Y\":false,\"U\":false,\"I\":false,\"O\":false,\"P\":false,\"A\":false,\"S\":false,\"D\":false,\"F\":false,\"G\":false,\"H\":false,\"J\":false,\"K\":false,\"L\":false,\";\":false,\"Z\":false,\"X\":false,\"C\":false,\"V\":false,\"B\":false,\"N\":false,\"M\":false,\",\":false,\".\":false,\"/\":false,\"'\":false,\"CTL\":false,\"SPC\":false,\"SFT\":false,\"TAB\":false,\"ESC\":false,\"BSPC\":false,\"WIN\":false,\"L1\":false,\"L2\":false,\"RTRN\":false,\"ALT\":false}}"
+  "python3 /home/jamie/.config/eww/scripts/get_key_labels.py")
+
+(defvar empty_column '["", "", ""]')
+(defvar column_count 14)
+
+;; Helper widget for individual keys
+(defwidget key [label]
+  (box
+    :class "${all_keys?.active_keys[label] ? 'key active' : 'key inactive'}"
+    (label :text "${label ?: ''}")))
+
+;; Column of three keys
+(defwidget tri-keys [class orientation index]
+  (box
+    :class "${class}"
+    :orientation "${orientation}"
+    :spacing 5
+    :space-evenly false
+    (for key in "${index <= column_count ? all_keys?.labels[index] : empty_column}"
+      (key :label "${key}"))))
+
+;; Half keyboard (left or right) with thumb cluster
+(defwidget keyboard-half-with-thumb [side]
+  (box
+    :orientation "vertical"
+    :spacing 10
+    :space-evenly false
+    (box 
+      :spacing 5
+      :space-evenly false
+      (for i in "${side == 'left' ? '[0,1,2,3,4,5]' : '[6,7,8,9,10,11]'}"
+        (tri-keys
+          :class "${side}-column-${side == 'left' ? i + 1 : i - 5}"
+          :orientation "vertical"
+          :index "${i}")))
+    (box
+      :halign "${side == 'left' ? 'end' : 'start'}"
+      (tri-keys
+        :class "${side}-thumb-cluster"
+        :orientation "horizontal"
+        :index "${side == 'left' ? 12 : 13}"))))
+
+;; Main keyboard layout
+(defwidget keyboard-layout []
+  (box
+    :class "keyboard-wrapper"
+    :orientation "horizontal"
+    :spacing 130
+    :space-evenly false
+    (keyboard-half-with-thumb :side "left")
+    (keyboard-half-with-thumb :side "right")))
+
+;; Window definition
+(defwindow keyboard
+  :monitor 1
+  :geometry (geometry 
+             :x "2.7%"
+             :y "2%"
+             :width "800px"
+             :height "400px"
+             :anchor "bottom right")
+  :stacking "fg"
+  :windowtype "dialog"
+  :wm-ignore true
+  :focusable false
+  (keyboard-layout))
+(defwidget status-indicator [icon value]
+  (box :class "status-indicator"
+    :halign 'center'
+    (overlay :class "indicator-overlay"
+      (progress 
+        :class "indicator-progress"
+        :value value
+        :orientation "v"
+        :flipped true)
+      (label 
+       :class "indicator-icon" 
+       :text icon))))
+
+;; Power menu container widget
+(defwidget power-controls []
+  (box :class "power-controls"
+       :orientation "v"
+       :space-evenly true
+       :spacing 15
+      :halign 'end'
+    (status-indicator :icon '󰕾' 
+                     :value volume-value)
+    (status-indicator :icon  '󰃞'
+                     :value brightness-value)
+    (status-indicator :icon '󰁹' 
+                     :value power-value)))
+
+(defwidget brainfm-button []
+  (eventbox 
+    :onclick "/home/jamie/.config/eww/scripts/toggle_brainfm.sh"
+    :cursor "pointer"
+    (box :class "menu-button"
+         :style "background-color: #39404C; border-radius: 5px; padding: 5px 10px;"
+         (label :text "󰎈" :style "color: #FFFFFF;"))))
+
+(defwidget barcontent [monitor]
+   (box :class "main-bar"  ;; Main bar container
+     :orientation "h"  ;; Horizontal orientation
+     :hexpand true
+     (box
+       :space-evenly false
+       :spacing 10
+       :halign "end"
+       (brainfm-button)
+       (label :valign "center" :halign "start" :text time-display :class "time-label")  ;; Time label
+     ;; Optional Trigger Button for Power Menu
+       (eventbox 
+         :onclick "/home/jamie/.config/eww/scripts/toggle_powermenu.sh ${monitor}"
+         :cursor "pointer"
+         (box :class "menu-button"
+              :style "background-color: #39404C; border-radius: 5px; padding: 5px 10px;"
+              (label :text "󰍜" :style "color: #FFFFFF;"))))
+     (children)))
+
+ 
+;; Power menu window for monitor 0
+(defwindow powermenu-0
+  :monitor 0
+  :geometry (geometry :x "0%"
+                     :y "4%"
+                     :width "200px"
+                     :height "200px"
+                     :anchor "top right")
+  :stacking "fg"
+  :windowtype "dialog"
+  :wm-ignore false
+  :focusable false
+  (power-controls))
+
+;; Power menu window for monitor 1
+(defwindow powermenu-1
+  :monitor 1
+  :geometry (geometry :x "0%"
+                     :y "4%"
+                     :width "200px"
+                     :height "200px"
+                     :anchor "top right")
+  :stacking "fg"
+  :windowtype "dialog"
+  :wm-ignore false
+  :focusable false
+  (power-controls))
+
+;; Window for the main bar
+(defwindow monitor-0
+   :monitor 0  ;; Monitor 0
+   :geometry (geometry :x "0%"  ;; X position
+                       :y "0%"  ;; Y position
+                       :width "100%"  ;; Width
+                       :height "1%"  ;; Height
+                       :anchor "top center")  ;; Anchor
+   :stacking "fg"  ;; Stacking order
+   :windowtype "dock"  ;; Window type
+   :wm-ignore false  ;; Window manager ignore
+   :focusable false  ;; Focusable
+   (barcontent
+    :monitor 0))
+            
+;; Window for the main bar
+(defwindow monitor-1
+   :monitor 1  ;; Monitor 1
+   :geometry (geometry :x "0%"  ;; X position
+                       :y "0%"  ;; Y position
+                       :width "100%"  ;; Width
+                       :height "1%"  ;; Height
+                       :anchor "top center")  ;; Anchor
+   :stacking "fg"  ;; Stacking order
+   :windowtype "dock"  ;; Window type
+   :wm-ignore false  ;; Window manager ignore
+   :focusable false  ;; Focusable
+   (barcontent
+    :monitor 1))
+
